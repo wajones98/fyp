@@ -3,5 +3,9 @@
 {% block content %}
 <div>
     <h1> Upload Data </h1>
+    <form id="upload-data-form" method="post" action="/upload/submit" enctype="multipart/form-data">
+        <input type="file" name="file[]" multiple>
+        <input type="submit">
+    </form>
 </div>
 {% endblock %}
