@@ -1,0 +1,97 @@
+{% extends "master.html" %}
+
+{% block content %}
+      {% for message in get_flashed_messages() %}
+        {% if 'successfully' in message %}
+        <div class="container">
+          <div class="alert alert-success">
+        {% else %}
+        <div class="container">
+          <div class="alert alert-danger">
+        {% endif %}
+            <button type="button" class="close" data-dismiss="alert">&times;</button>
+            {{ message }}
+          </div>
+        </div>
+      {% endfor %}
+      <div class="form-box">
+          <div class="button-box">
+              <div id="btn"></div>
+              <button type="button" class="toggle-btn" onclick="login()"> Login </button>
+              <button type="button" class="toggle-btn" onclick="register()"> Register </button>
+          </div>
+
+  <!-- LOGIN FORM -->
+          <form id="login" method="post" class="input-group" action="/auth/login">
+            <input name="email" type="email" class="input-field" id="loginEmail" placeholder="Email" required>
+            <input name="password" type="password" class="input-field" id="loginPassword" placeholder="Password" required>
+            <button type="submit" onclick="" class="submit-btn">Login</button>
+          </form>
+
+  <!-- REGISTER FORM -->
+          <form id="register" method="post" class="input-group" action="/auth/register">
+            <input name = regFirstname type="text" class="input-field" id="regFirstname" placeholder="First Name" required>
+            <input name = regLastname type="text" class="input-field" id="regLastname" placeholder="Last Name" required>
+            <input name = regEmail type="email" class="input-field" id="regEmail" placeholder="Email" required>
+            <input name = regPassword type="password" class="input-field" id="regPassword" placeholder="Password" required>
+            <input name = regPassword2 type="password" class="input-field" id="regPassword2" placeholder="Re-Enter Password" required>
+
+            <br>
+
+            <label>Account Type:</label>
+            <select name="accountType" class="select-box" id="accountType" onchange="StaffMember(); notStaffMember()" required>
+              <option value="">Select One</option>
+              <option value="0" >Customer</option>
+              <option value="1" >Privileged Customer</option>
+              <option value="2" >Staff</option>
+              <option value="3" >Admin</option>
+            </select>
+
+            <label id="DeptCode">Department Code:</label>
+            <select name="departmentCode" id="department_Code" class="select-box" required>
+              <option value="">Select One</option>
+              <option value="C0MP1" >Computer Science</option>
+              <option value="CH3M1" >Chemistry</option>
+              <option value="F0R3N" >Forensics</option>
+              <option value="M3CH3" >Mechanical Engineering</option>
+              <option value="M4TH5" >Maths</option>
+              <option value="PHY5C" >Physics</option>
+            </select>
+            <button type="submit" class="submit-btn" onclick="checkPass(regPassword, regPassword2, event)" >Register</button>
+          </form>
+      </div>
+
+      <script>
+        var x = document.getElementById("login");
+        var y = document.getElementById("register");
+        var z = document.getElementById("btn");
+
+        function register() {
+          x.style.left = "-400px";
+          y.style.left = "50px";
+          z.style.left = "110px";
+        }
+        function login() {
+          x.style.left = "50px";
+          y.style.left = "450px";
+          z.style.left = "0px";
+        }
+
+        function StaffMember() {
+          if(document.getElementById('accountType').value === "2" || document.getElementById('accountType').value === "3") {
+            department_Code.setAttribute('style', 'display: none;');
+            DeptCode.setAttribute('style', 'display: none;');
+
+            document.getElementById("department_Code").required = false;
+          }
+        }
+
+        function notStaffMember() {
+        if(document.getElementById('accountType').value === "0" || document.getElementById('accountType').value === "1"){
+          department_Code.removeAttribute('style', 'display: none;');
+          DeptCode.removeAttribute('style', 'display: none;');
+          }
+        }
+
+      </script>
+{% endblock %}
