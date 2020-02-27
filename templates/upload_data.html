@@ -4,7 +4,7 @@
 <div class="container text-center">
     <h1> Upload Data </h1>
     <form id="upload-data-form" method="post" action="/upload/submit" enctype="multipart/form-data">
-        <label for="upload-files">Select Files<i class="fas fa-file-alt" style="margin-left: 5px;"></i></label>
+        <label class="adminButton"for="upload-files">Select Files<i class="fas fa-file-alt" style="margin-left: 5px;"></i></label>
         <input id="upload-files" type="file" name="file[]" multiple>
         <button type="submit" class="adminButton" onclick="submit()">Confirm Items<i class="fas fa-check-circle" style="margin-left: 5px;"></i></button>
     </form>
