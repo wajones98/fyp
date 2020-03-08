@@ -20,7 +20,7 @@ def submit_files():
         for data_file in data_files:
             file = file_model.File(data_file)
             file.upload_file_landing()
-            file.upload_file_s3()
-            file.delete_file_landing()
+            #file.upload_file_s3()
+            #file.delete_file_landing()
 
         return render_template('upload_data.html')

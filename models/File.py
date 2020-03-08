@@ -4,7 +4,7 @@ import os
 
 class File:
 
-    LANDING_FOLDER = 'C:\\Users\\wajon\\OneDrive\\Documents\\GitHub\\fyp\\landing\\'
+    LANDING_FOLDER = '..\\fyp\\landing\\'
     BUCKET = 'fyp-data-repo'
     S3_CLIENT = boto3.client('s3')
 
