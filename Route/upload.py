@@ -11,7 +11,7 @@ def upload_metadata(user_id):
         meta_obj = UploadModel(user_id, content)
         response = meta_obj.upload_file_metadata()
         return response
-    return {"Response": 500}
+    return {"Status": 500}
 
 
 @upload.route('/upload/file/<file_id>', methods=['POST'])

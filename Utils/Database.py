@@ -7,7 +7,7 @@ class Database:
     def connect():
         conn = pyodbc.connect(
                 'Driver={ODBC Driver 17 for SQL Server};'
-                'Server=(LocalDb)\MSSQLLocalDB;'
+                'Server=secretsasquatchsociety.chefvdjywstx.eu-west-2.rds.amazonaws.com,1433;'
                 'Database=MetaData;'
                 'uid=admin;'
                 'pwd=letsusefirebase;')
