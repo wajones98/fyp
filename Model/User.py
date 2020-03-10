@@ -16,11 +16,9 @@ class User:
         conn = Database.connect()
         cursor = conn.cursor()
         results = Database.execute_sproc(query, params, cursor)
+        conn.commit()
         conn.close()
-        if results[0][0] is not 500:
-            return results[0][0]
-        else:
-            return results[0][0]
+        return results[0][0]
 
     def user_register(self):
         query = """
@@ -46,6 +44,18 @@ class User:
         user.set_first_name(user_obj['FirstName'])
         user.set_last_name(user_obj['LastName'])
         return user
+
+    @staticmethod
+    def get_user_from_session(session_id):
+        query = """
+                [usr].[GetUserIDFromSession] ?
+                """
+        params = session_id
+        conn = Database.connect()
+        cursor = conn.cursor()
+        results = Database.execute_sproc(query, params, cursor)
+        conn.close()
+        return results[0][0]
 
     def set_user_id(self, user_id):
         self.user_id = user_id
