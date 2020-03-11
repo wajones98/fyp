@@ -2,7 +2,7 @@ from Utils.Database import Database
 
 
 class Upload:
-    def __init__(self, user_id, content, dataset_id):
+    def __init__(self, user_id, content):
         self.user_id = user_id
         self.file_id = None
         self.signal_type = content['SignalType']
@@ -11,7 +11,7 @@ class Upload:
         self.age = content['Age']
         self.target = content['Target']
         self.action = content['Action']
-        self.dataset_id = dataset_id
+        self.dataset_id = content['DatasetID']
         self.tags = content['Tags']
 
     def upload_file_metadata(self):

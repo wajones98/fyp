@@ -54,6 +54,8 @@ class User:
         conn = Database.connect()
         cursor = conn.cursor()
         results = Database.execute_sproc(query, params, cursor)
+        if results[0][0] == 'Session expired':
+            cursor.commit()
         conn.close()
         return results[0][0]
 

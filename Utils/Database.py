@@ -31,3 +31,14 @@ class Database:
     @staticmethod
     def execute_non_query(query, cursor):
         cursor.execute(query)
+
+    @staticmethod
+    def generate_unique_identifier():
+        query = """
+                SELECT NEWID()
+                """
+        conn = Database.connect()
+        cursor = conn.cursor()
+        results = Database.execute_query(query, cursor)
+        conn.close()
+        return results[0][0]
