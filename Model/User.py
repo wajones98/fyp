@@ -18,7 +18,7 @@ class User:
         results = Database.execute_sproc(query, params, cursor)
         conn.commit()
         conn.close()
-        return results[0][0]
+        return results
 
     def user_register(self):
         query = """
@@ -28,13 +28,10 @@ class User:
         conn = Database.connect()
         cursor = conn.cursor()
         results = Database.execute_sproc(query, params, cursor)
-        if results[0][0] is not 500:
-            response = results[0][0]
+        if results['Status'] != 500:
             conn.commit()
-        else:
-            response = results[0][0]
         conn.close()
-        return response
+        return results
 
     @staticmethod
     def create_user_obj(user_obj):
@@ -54,10 +51,10 @@ class User:
         conn = Database.connect()
         cursor = conn.cursor()
         results = Database.execute_sproc(query, params, cursor)
-        if results[0][0] == 'Session expired':
+        if results['Status'] == 404:
             cursor.commit()
         conn.close()
-        return results[0][0]
+        return results
 
     def set_user_id(self, user_id):
         self.user_id = user_id

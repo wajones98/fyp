@@ -8,8 +8,8 @@ auth = Blueprint('auth', __name__)
 def login():
     if request.method == 'POST':
         contents = request.get_json()
-        session_id = UserModel.user_login(contents['Email'], contents['Password'])
-        return {"session_id": session_id}
+        response = UserModel.user_login(contents['Email'], contents['Password'])
+        return response
 
 
 @auth.route('/auth/register', methods=['POST'])
@@ -18,4 +18,4 @@ def register():
         contents = request.get_json()
         user = UserModel.create_user_obj(contents)
         response = user.user_register()
-        return {"Status": response}
+        return response

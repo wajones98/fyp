@@ -15,13 +15,15 @@ class Database:
 
     @staticmethod
     def execute_sproc(sproc, params, cursor):
-        query = """
-            DECLARE @out nvarchar(max);
-            EXEC %s ,@responseMessage = @out OUTPUT;
-            SELECT @out AS the_output;         
-            """ % sproc
+        query = f"""
+            DECLARE @return_value int, @out nvarchar(max);
+            EXEC    @return_value = {sproc}, 
+                    @responseMessage = @out OUTPUT;
+            SELECT @return_value AS return_value, @out AS the_output;         
+            """
         cursor.execute(query, params)
-        return cursor.fetchall()
+        results = cursor.fetchall()
+        return {'Status': results[0][0], 'Message': results[0][1]}
 
     @staticmethod
     def execute_query(query, cursor):
@@ -32,13 +34,3 @@ class Database:
     def execute_non_query(query, cursor):
         cursor.execute(query)
 
-    @staticmethod
-    def generate_unique_identifier():
-        query = """
-                SELECT NEWID()
-                """
-        conn = Database.connect()
-        cursor = conn.cursor()
-        results = Database.execute_query(query, cursor)
-        conn.close()
-        return results[0][0]
