@@ -8,46 +8,22 @@ import json
 upload = Blueprint('upload', __name__)
 
 
-@upload.route('/upload/metadata/dataset', methods=['POST'])
-def upload_dataset():
-    if request.method == 'POST':
-        content = request.get_json()
-        user_id = UserModel.get_user_from_session(content['SessionID'])
-        if user_id is not None:
-            content = request.get_json()
-            result = UploadModel.generate_dataset_id(content['DatasetName'])
-            return result
-
-
-@upload.route('/upload/metadata/file', methods=['POST'])
+@upload.route('/upload/metadata', methods=['POST'])
 def upload_metadata():
     if request.method == 'POST':
-        content = request.get_json()
-        user_id = UserModel.get_user_from_session(content['SessionID'])
-        if user_id != 'Session does not exist':
-            content = request.get_json()
-            meta_obj = UploadModel(user_id, content)
-            response = meta_obj.upload_file_metadata()
-            return response
-    return {"Status": 500, "Message": user_id}
-
-
-@upload.route('/upload/file/<file_id>', methods=['POST'])
-def upload_file(file_id):
-    if request.method == 'POST':
-        files = request.files.getlist('file')
-        file_obj = FileModel(files[0])
-        file_obj.upload_file_landing()
-        response = FileModel.check_for_dataset(file_id)
+        response = UserModel.get_user_from_session(request.headers.get('SessionId'))
         if response['Status'] == 200:
-            dataset_id = response['Message']
-            file_path = file_obj.upload_dataset_file_s3(dataset_id)
-        else:
-            file_path = file_obj.upload_file_s3()
-        UploadModel.update_init_file_path(file_id, file_path)
-        file_obj.delete_file_landing()
-        return {'Status': 201, 'FileID': file_id, 'FilePath': file_path}
-    return {'Status': 500}
+            user_id = response['Message']
+            content = request.get_json()
+            dataset_id = content['DataSetId']
+            response = UploadModel.create_dataset_metadata(dataset_id, content['DataSetName'])
+            if response['Status'] in (200, 201):
+                file_responses = []
+                for file_id in content['Files'].keys():
+                    metadata = UploadModel(file_id, content['Files'][file_id], user_id, content)
+                    file_responses.append(metadata.upload_file_metadata())
+                response['Files'] = file_responses
+        return json.dumps(response)
 
 
 @upload.route('/upload/files', methods=['POST'])
@@ -64,16 +40,17 @@ def upload_files():
                 file_valid_response = file_obj.check_file_extension()
                 if file_valid_response['Status'] == 200:
                     file_obj.upload_file_landing()
-                    file_path = file_obj.upload_dataset_file_s3(dataset_id)
+                    file_path = file_obj.upload_dataset_file_s3(dataset_id, file_id)
                     if file_path is not None:
-                        UploadModel.update_init_file_landing(file_id, file_path)
                         file_obj.delete_file_landing()
-                        response['Files'].append({'FileId': file_id, 'Message': 'Successfully uploaded'})
+                        response['Files'].append({'FileId': file_id, 'FileName': file_obj.file_name,
+                                                  'Message': 'Successfully uploaded'})
                     else:
-                        response['Files'].append({'FileId': file_id, 'Message': 'Could not upload to S3'})
+                        response['Files'].append({'FileId': file_id, 'FileName': file_obj.file_name,
+                                                  'Message': 'Could not upload to S3'})
                 else:
-                    response['Files'].append({'FileId': file_id, 'Message': file_valid_response['Message']})
+                    response['Files'].append({'Status': file_valid_response['Status'],
+                                              'FileId': file_id, 'Message': file_valid_response['Message']})
             return json.dumps(response)
         else:
             return response
-    return {"Status": 405, "Message": 'Method not allowed'}

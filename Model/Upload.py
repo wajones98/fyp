@@ -2,53 +2,54 @@ from Utils.Database import Database
 
 
 class Upload:
-    def __init__(self, user_id, content):
+    def __init__(self, file_id, file_name, user_id, content):
         self.user_id = user_id
-        self.file_id = None
+        self.file_id = file_id
+        self.file_name = file_name
         self.signal_type = content['SignalType']
         self.species = content['Species']
         self.gender = content['Gender']
         self.age = content['Age']
         self.target = content['Target']
         self.action = content['Action']
-        self.dataset_id = content['DatasetID']
+        self.device = content['Device']
+        self.dataset_id = content['DataSetId']
+        self.channel_count = content['ChannelCount']
         self.tags = content['Tags']
 
     def upload_file_metadata(self):
         query = f"""
-                [metadata].[InsertFileMetaData] ?,?,?,?,?,?,?,?
+                [metadata].[InsertFileMetaData] ?,?,?,?,?,?,?,?,?,?,?,?
                 """
-        params = (self.user_id, self.signal_type, self.species, self.gender,
-                  self.age, self.target, self.action, self.dataset_id)
+        params = (self.file_id, self.file_name, self.user_id, self.signal_type, self.species, self.gender,
+                  self.age, self.target, self.action, self.device, self.dataset_id, self.channel_count)
         conn = Database.connect()
         cursor = conn.cursor()
         results = Database.execute_sproc(query, params, cursor)
-        if results[0][0] is not 'Failure':
-            self.file_id = results[0][0]
+        if results['Status'] == 201:
+
             for key in self.tags.keys():
                 Database.execute_non_query(self.upload_tags(key), cursor)
             cursor.commit()
-            response = {"Status": 200, "file_id": self.file_id}
+            response = {'Status': results['Status'], 'FileId': self.file_id, "Message": results['Message']}
         else:
             cursor.rollback()
-            response = {"Response": 500}
+            response = {'Status': results['Status'], 'FileId': self.file_id, "Message": results['Message']}
         conn.close()
         return response
 
     @staticmethod
-    def generate_dataset_id(dataset_name):
+    def create_dataset_metadata(dataset_id, dataset_name):
+
         query = f"""
-                [metadata].[InsertDataset] ?
+                [metadata].[GetorInsertDataset] ?, ?
                 """
-        params = dataset_name
+        params = (dataset_name, dataset_id)
         conn = Database.connect()
         cursor = conn.cursor()
-        results = Database.execute_sproc(query, params, cursor)
-        if results[0][0] is not 'Failure':
+        response = Database.execute_sproc(query, params, cursor)
+        if response['Status'] == 201:
             cursor.commit()
-            response = {"Status": 200, "DatasetID": results[0][0]}
-        else:
-            response = {"Status": 500, "Error": results[0][0]}
         conn.close()
         return response
 
@@ -63,7 +64,7 @@ class Upload:
         return query
 
     @staticmethod
-    def update_init_file_path(file_id, file_path):
+    def init_file_path(file_id, file_path):
         query = f"""
                 UPDATE 
                     [metadata].[FileHistory]

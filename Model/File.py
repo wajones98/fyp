@@ -27,8 +27,8 @@ class File:
     def delete_file_landing(self):
         os.remove(self.full_path)
 
-    def upload_dataset_file_s3(self, directory):
-        s3_path = f"{directory}/{Common.generate_unique_identifier()}-{self.file_name}"
+    def upload_dataset_file_s3(self, directory, file_id):
+        s3_path = f"{directory}/{file_id}-{self.file_name}"
         self.S3_CLIENT.upload_file(self.full_path, self.BUCKET, s3_path)
         return s3_path
 
