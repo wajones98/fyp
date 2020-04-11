@@ -56,6 +56,33 @@ class User:
         conn.close()
         return results
 
+    @staticmethod
+    def get_user_info(user_id):
+        query = f"""
+                SELECT TOP 1
+                    [Email]
+                    ,[FirstName]
+                    ,[LastName]
+                    ,[Institution]
+                FROM
+                    [usr].[User]
+                WHERE
+                    [UserID] = {user_id}
+                """
+        conn = Database.connect()
+        cursor = conn.cursor()
+        results = Database.execute_query(query, cursor)
+        conn.close()
+        user = User()
+        for row in results:
+            user.set_user_id(user_id)
+            user.set_email(row[0])
+            user.set_first_name(row[1])
+            user.set_last_name(row[2])
+            if row[3] is not None:
+                user.set_institution(row[3])
+        return user
+
     def set_user_id(self, user_id):
         self.user_id = user_id
         return self
@@ -90,3 +117,17 @@ class User:
 
     def get_last_name(self):
         return self.user['last_name']
+
+    def set_institution(self, institution):
+        self.user['institution'] = institution
+        return self
+
+    def get_institution(self):
+        return self.user['institution']
+
+    def set_institution_role(self, role):
+        self.user['role'] = role
+        return self
+
+    def get_institution_role(self):
+        return self.user['role']

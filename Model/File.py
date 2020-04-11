@@ -61,3 +61,35 @@ class File:
         else:
             return {'Status': 200, 'Message': results[0][0]}
 
+    @staticmethod
+    def download_file_s3(file_path, local_file_path):
+        query = f"""
+                SELECT TOP 1
+                    [Filename]
+                    ,[DatasetName]
+                FROM
+                    [metadata].[Search]
+                WHERE
+                    [FilePath] = '{file_path}'
+                """
+        conn = Database.connect()
+        cursor = conn.cursor()
+        results = Database.execute_query(query, cursor)
+        conn.close()
+        for row in results:
+            file_name = row[0]
+            dataset_name = row[1]
+        bucket = 'fyp-data-repo'
+        s3_client = boto3.client('s3')
+        local_directory = os.path.join(local_file_path, dataset_name)
+        if not os.path.exists(local_directory):
+            os.mkdir(local_directory)
+        full_local_path = os.path.join(local_directory, file_name)
+        s3_client.download_file(bucket, file_path, full_local_path)
+        if os.path.exists(full_local_path):
+            response = {'FileName': file_name, 'DatasetName': dataset_name, 'Path': full_local_path, 'Status': '200',
+                        'Message': 'File downloaded successfully'}
+        else:
+            response = {'FileName': file_name, 'DatasetName': dataset_name, 'Path': full_local_path, 'Status': '500',
+                        'Message': 'File downloaded unsuccessful'}
+        return response

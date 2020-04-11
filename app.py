@@ -1,6 +1,7 @@
 from flask import Flask, redirect
 from Route.upload import upload
 from Route.auth import auth
+from Route.search import search
 app = Flask(__name__)
 app.debug = True
 
@@ -9,6 +10,7 @@ app.secret_key = b'\x9a\xac\xea\x9e\xe9\xbbN\x1d\xa5\xb4\x1f\x17\xd3\xdd\x96O'
 
 app.register_blueprint(upload)
 app.register_blueprint(auth)
+app.register_blueprint(search)
 
 
 @app.route('/')
