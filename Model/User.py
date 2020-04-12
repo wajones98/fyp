@@ -67,7 +67,7 @@ class User:
                 FROM
                     [usr].[User]
                 WHERE
-                    [UserID] = {user_id}
+                    [UserID] = '{user_id}'
                 """
         conn = Database.connect()
         cursor = conn.cursor()
@@ -81,7 +81,28 @@ class User:
             user.set_last_name(row[2])
             if row[3] is not None:
                 user.set_institution(row[3])
+            else:
+                user.set_institution(None)
         return user
+
+    @staticmethod
+    def get_user_from_email(email):
+        query = f"""
+                SELECT TOP 1
+                    [UserId]
+                FROM
+                    [usr].[User]
+                WHERE
+                    [Email] = '{email}'
+                """
+        conn = Database.connect()
+        cursor = conn.cursor()
+        results = Database.execute_query(query, cursor)
+        conn.close()
+        if len(results) > 0:
+            return results[0][0]
+        else:
+            return None
 
     def set_user_id(self, user_id):
         self.user_id = user_id
@@ -119,15 +140,22 @@ class User:
         return self.user['last_name']
 
     def set_institution(self, institution):
-        self.user['institution'] = institution
+        self.user['Institution'] = institution
         return self
 
     def get_institution(self):
-        return self.user['institution']
+        return self.user['Institution']
 
     def set_institution_role(self, role):
-        self.user['role'] = role
+        self.user['Role'] = role
         return self
 
     def get_institution_role(self):
-        return self.user['role']
+        return self.user['Role']
+
+    def set_institution_pending(self, pending):
+        self.user['Pending'] = pending
+        return self
+
+    def get_institution_pending(self):
+        return self.user['Pending']
