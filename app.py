@@ -3,6 +3,8 @@ from Route.upload import upload
 from Route.auth import auth
 from Route.search import search
 from Route.institution import institution
+from Route.project import project
+
 app = Flask(__name__)
 app.debug = True
 
@@ -13,6 +15,7 @@ app.register_blueprint(upload)
 app.register_blueprint(auth)
 app.register_blueprint(search)
 app.register_blueprint(institution)
+app.register_blueprint(project)
 
 
 @app.route('/')

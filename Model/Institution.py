@@ -92,7 +92,7 @@ class Institution:
         pending = Institution.get_all_pending(user_id)
         if institution_id in pending:
             query = f"""
-                    [usr].[accept_institution_invite] ?, ?
+                    [usr].[AcceptInstitutionInvite] ?, ?
                     """
             params = (user_id, institution_id)
             conn = Database.connect()
