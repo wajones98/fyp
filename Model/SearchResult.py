@@ -42,7 +42,7 @@ class Search:
                         f"{self.where_clause} s.[{key}] = '{val}' AND "
                 self.where_clause = self.where_clause[0:-4]
         if 'Tags' in request:
-            self.query = f"{self.query} INNER JOIN [metadata].[Tag] t ON s.[FileID] = t.[FileID] "
+            self.query = f"{self.query} INNER JOIN [metadata].[Tag] t ON s.[DatasetId] = t.[DatasetId] "
             val = request['Tags']
             for key in val.keys():
                 self.query_tags(key, val)
@@ -66,7 +66,7 @@ class Search:
         conn.close()
         all_data = []
         for row in results:
-            file_id = row[0]
+            dataset_id = row[14]
             tag_query = f"""
                     SELECT
                         [TagKey]
@@ -74,7 +74,7 @@ class Search:
                     FROM
                         [metadata].[Tag]
                     WHERE
-                        [FileId] = '{file_id}'
+                        [DatasetId] = '{dataset_id}'
                     """
             conn = Database.connect()
             cursor = conn.cursor()

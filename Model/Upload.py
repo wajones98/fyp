@@ -28,9 +28,6 @@ class Upload:
         cursor = conn.cursor()
         results = Database.execute_sproc(query, params, cursor)
         if results['Status'] == 201:
-
-            for key in self.tags.keys():
-                Database.execute_non_query(self.upload_tags(key), cursor)
             cursor.commit()
             response = {'Status': results['Status'], 'FileId': self.file_id, "Message": results['Message']}
         else:
@@ -54,15 +51,18 @@ class Upload:
         conn.close()
         return response
 
-    def upload_tags(self, key):
+    @staticmethod
+    def upload_tags(dataset_id, key, value):
         query = f"""
                 INSERT INTO
                     [metadata].[Tag]
-                    ([FileID],[TagKey],[TagValue])
+                    ([DatasetId],[TagKey],[TagValue])
                 VALUES
-                    ('{self.file_id}','{key}','{self.tags[key]}')
+                    ('{dataset_id}','{key}','{value}')
                 """
-        return query
+        conn = Database.connect()
+        cursor = conn.cursor()
+        Database.execute_non_query(query, cursor)
 
     @staticmethod
     def init_file_path(file_id, file_path):
