@@ -20,7 +20,7 @@ def upload_metadata():
             if response['Status'] in (200, 201):
                 file_responses = []
                 for file_id in content['Files'].keys():
-                    metadata = UploadModel(file_id, content['Files'][file_id], user_id, content)
+                    metadata = UploadModel(file_id, content['Files'].get(file_id), user_id, content)
                     file_responses.append(metadata.upload_file_metadata())
                 response['Files'] = file_responses
         return json.dumps(response)

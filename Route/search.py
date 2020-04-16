@@ -8,9 +8,9 @@ import json
 search = Blueprint('search', __name__)
 
 
-@search.route('/search', methods=['GET'])
+@search.route('/search', methods=['POST'])
 def search_for():
-    if request.method == 'GET':
+    if request.method == 'POST':
         response = UserModel.get_user_from_session(request.headers.get('SessionId'))
         if response['Status'] == 200:
             search_builder = SearchModel(request.get_json())

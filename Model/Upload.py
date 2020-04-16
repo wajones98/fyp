@@ -23,6 +23,7 @@ class Upload:
                 """
         params = (self.file_id, self.file_name, self.user_id, self.signal_type, self.species, self.gender,
                   self.age, self.target, self.action, self.device, self.dataset_id, self.channel_count)
+        print(params)
         conn = Database.connect()
         cursor = conn.cursor()
         results = Database.execute_sproc(query, params, cursor)
@@ -42,7 +43,7 @@ class Upload:
     def create_dataset_metadata(dataset_id, dataset_name):
 
         query = f"""
-                [metadata].[GetorInsertDataset] ?, ?
+                [metadata].[GetorInsertDataset] @DatasetName = ?, @DataSetId = ?
                 """
         params = (dataset_name, dataset_id)
         conn = Database.connect()

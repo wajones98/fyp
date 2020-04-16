@@ -22,6 +22,7 @@ class Search:
                     ,s.[Device]
                     ,s.[Change]
                     ,s.[Filepath]
+                    ,s.[DatasetId]
                 FROM
                     [metadata].[Search] s
                 """
@@ -59,7 +60,6 @@ class Search:
 
         if self.where_clause != 'WHERE ':
             self.query = self.query + self.where_clause
-        print(self.query)
         conn = Database.connect()
         cursor = conn.cursor()
         results = Database.execute_query(self.query, cursor)
@@ -96,6 +96,7 @@ class Search:
                 , 'Device': row[11]
                 , 'Change': row[12]
                 , 'Filepath': row[13]
+                , 'DatasetId': row[14]
                 ,  'Tags': tags}
             all_data.append(data)
         response = {"Results": all_data}
