@@ -6,6 +6,15 @@ import json
 project = Blueprint('project', __name__)
 
 
+@project.route('/project/get', methods=['GET'])
+def project_get():
+    if request.method == 'GET':
+        response = User.get_user_from_session(request.headers.get('SessionId'))
+        if response['Status'] == 200:
+            return Project.get_users_projects(response['Message'])
+    return response
+
+
 @project.route('/project/create', methods=['POST'])
 def project_create():
     if request.method == 'POST':

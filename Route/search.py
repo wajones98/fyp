@@ -18,13 +18,11 @@ def search_for():
     return json.dumps(response)
 
 
-@search.route('/download', methods=['GET'])
-def download():
-    if request.method == 'GET':
+@search.route('/download/file', methods=['POST'])
+def download_file():
+    if request.method == 'POST':
         response = UserModel.get_user_from_session(request.headers.get('SessionId'))
         if response['Status'] == 200:
-            download_responses = []
             json_query = request.get_json()
-            for file_path in json_query['Files']:
-                download_responses.append(FileModel.download_file_s3(file_path, json_query['Local']))
-    return json.dumps(download_responses)
+            return FileModel.download_file_s3(json_query['File'])
+    return json.dumps(response)

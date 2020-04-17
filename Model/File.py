@@ -4,11 +4,13 @@ import os
 from Utils.Database import Database
 from Utils import Common
 from werkzeug.utils import secure_filename
+from flask import send_file
+
+LANDING_FOLDER = '..\\fyp\\landing\\'
 
 
 class File:
 
-    LANDING_FOLDER = '..\\fyp\\landing\\'
     BUCKET = 'fyp-data-repo'
     S3_CLIENT = boto3.client('s3')
     ALLOWED_EXTENSIONS = ('csv', 'mat')
@@ -16,7 +18,7 @@ class File:
     def __init__(self, file):
         self.file = file
         self.file_name = secure_filename(file.filename)
-        self.full_path = os.path.join(self.LANDING_FOLDER, self.file_name)
+        self.full_path = os.path.join(LANDING_FOLDER, self.file_name)
         self.file_extension = os.path.splitext(self.file_name)[1]
         return
 
@@ -62,7 +64,7 @@ class File:
             return {'Status': 200, 'Message': results[0][0]}
 
     @staticmethod
-    def download_file_s3(file_path, local_file_path):
+    def download_file_s3(file_path):
         query = f"""
                 SELECT TOP 1
                     [Filename]
@@ -81,15 +83,16 @@ class File:
             dataset_name = row[1]
         bucket = 'fyp-data-repo'
         s3_client = boto3.client('s3')
-        local_directory = os.path.join(local_file_path, dataset_name)
+        local_directory = os.path.join(LANDING_FOLDER, dataset_name)
         if not os.path.exists(local_directory):
             os.mkdir(local_directory)
         full_local_path = os.path.join(local_directory, file_name)
         s3_client.download_file(bucket, file_path, full_local_path)
-        if os.path.exists(full_local_path):
-            response = {'FileName': file_name, 'DatasetName': dataset_name, 'Path': full_local_path, 'Status': '200',
-                        'Message': 'File downloaded successfully'}
-        else:
-            response = {'FileName': file_name, 'DatasetName': dataset_name, 'Path': full_local_path, 'Status': '500',
-                        'Message': 'File downloaded unsuccessful'}
-        return response
+        return send_file(full_local_path, as_attachment=True)
+        #if os.path.exists(full_local_path):
+            #response = {'FileName': file_name, 'DatasetName': dataset_name, 'Path': full_local_path, 'Status': '200',
+                        #'Message': 'File downloaded successfully'}
+        #else:
+            #response = {'FileName': file_name, 'DatasetName': dataset_name, 'Path': full_local_path, 'Status': '500',
+                        #'Message': 'File downloaded unsuccessful'}
+        #return response

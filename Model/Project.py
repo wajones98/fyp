@@ -1,8 +1,72 @@
 from Utils.Database import Database
 from Model.User import User
 
+import json
 
 class Project:
+
+    @staticmethod
+    def get_users_projects(user_id):
+        query = f"""
+            SELECT
+                p.[ProjectID]
+                ,p.[Name]
+                ,p.[Desc]
+                ,u.[Email]
+                ,p.[StartDate]
+                ,p.[EndDate]
+                ,p.[Public]
+            FROM 
+                [MetaData].[prj].[Project] p
+                INNER JOIN
+                [MetaData].[usr].[User] u
+            ON
+                p.[Creator] = u.[UserID]
+                LEFT JOIN
+                [MetaData].[prj].[ProjectMember] pm
+            ON
+                p.[ProjectID] = pm.[ProjectID]
+            WHERE
+                pm.[UserID] = '{user_id}'
+                OR
+                p.[Creator] = '{user_id}'
+            """
+        conn = Database.connect()
+        cursor = conn.cursor()
+        results = Database.execute_query(query, cursor)
+        projects = []
+        for row in results:
+            project = Project()
+            project.set_project_id(row[0])
+            project.set_name(row[1])
+            project.set_desc(row[2])
+            project.set_creator(row[3])
+            project.set_start_date(row[4])
+            project.set_end_date(row[5])
+            project.set_public(row[6])
+            query = f"""
+                    SELECT
+                        u.[Email]
+                    FROM
+                        [MetaData].[prj].[ProjectMember] pm	
+                        INNER JOIN
+                        [MetaData].[usr].[User] u
+                    ON
+                        pm.[UserId] = u.[UserID]
+                    WHERE
+                        [ProjectID] = '{project.get_project_id()}'
+                    """
+            cursor = conn.cursor()
+            results = Database.execute_query(query, cursor)
+            members = []
+            for member_row in results:
+                user = User.get_user_from_email(member_row[0])
+                members.append(user)
+            project.set_project_members(members)
+            projects.append(project.project)
+        conn.close()
+        response = {'Projects': projects}
+        return json.dumps(response)
 
     @staticmethod
     def create_project(user_id, project_info):
@@ -129,14 +193,14 @@ class Project:
         return self.project['Desc']
 
     def set_start_date(self, start_date):
-        self.project['StartDate'] = start_date
+        self.project['StartDate'] = str(start_date)
         return self
 
     def get_start_date(self):
         return self.project['StartDate']
 
     def set_end_date(self, end_date):
-        self.project['EndDate'] = end_date
+        self.project['EndDate'] = str(end_date)
         return self
 
     def get_end_date(self):
