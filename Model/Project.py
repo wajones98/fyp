@@ -6,6 +6,42 @@ import json
 class Project:
 
     @staticmethod
+    def get_users_invitations(user_id):
+        query = f"""
+            SELECT
+                p.[ProjectID]
+                ,p.[Name]
+                ,u.[Email]
+            FROM 
+                [MetaData].[prj].[Project] p
+                INNER JOIN
+                [MetaData].[usr].[User] u
+            ON
+                p.[Creator] = u.[UserID]
+                LEFT JOIN
+                [MetaData].[prj].[ProjectMember] pm
+            ON
+                p.[ProjectID] = pm.[ProjectID]
+            WHERE
+                pm.[Pending] = 1
+                AND
+                pm.[UserID] = '{user_id}'
+                """
+        conn = Database.connect()
+        cursor = conn.cursor()
+        results = Database.execute_query(query, cursor)
+        projects = []
+        for row in results:
+            project = Project()
+            project.set_project_id(row[0])
+            project.set_name(row[1])
+            project.set_creator(row[2])
+            projects.append(project.project)
+        conn.close()
+        response = {'Projects': projects}
+        return json.dumps(response)
+
+    @staticmethod
     def get_users_projects(user_id):
         query = f"""
             SELECT
@@ -27,6 +63,8 @@ class Project:
             ON
                 p.[ProjectID] = pm.[ProjectID]
             WHERE
+                pm.[Pending] = 0
+                AND
                 pm.[UserID] = '{user_id}'
                 OR
                 p.[Creator] = '{user_id}'
@@ -46,7 +84,8 @@ class Project:
             project.set_public(row[6])
             query = f"""
                     SELECT
-                        u.[Email]
+                        u.[Email],
+                        pm.[Pending]
                     FROM
                         [MetaData].[prj].[ProjectMember] pm	
                         INNER JOIN
@@ -60,8 +99,10 @@ class Project:
             results = Database.execute_query(query, cursor)
             members = []
             for member_row in results:
-                user = User.get_user_from_email(member_row[0])
-                members.append(user)
+                user_id = User.get_user_from_email(member_row[0])
+                user = User.get_user_info(user_id)
+                user.user['pending'] = member_row[1]
+                members.append(user.user)
             project.set_project_members(members)
             projects.append(project.project)
         conn.close()
@@ -103,14 +144,18 @@ class Project:
                 [prj].[InviteUserToProject] @UserId = ?, @ProjectId = ?
                 """
         user_id = User.get_user_from_email(project_info['Email'])
-        project_id = project_info['ProjectId']
-        params = (user_id, project_id)
-        conn = Database.connect()
-        cursor = conn.cursor()
-        results = Database.execute_sproc(query, params, cursor)
-        if results['Status'] == 201:
-            cursor.commit()
-        conn.close()
+
+        if user_id is not None:
+            project_id = project_info['ProjectId']
+            params = (user_id, project_id)
+            conn = Database.connect()
+            cursor = conn.cursor()
+            results = Database.execute_sproc(query, params, cursor)
+            if results['Status'] == 201:
+                cursor.commit()
+            conn.close()
+        else:
+            results = {'Status': 404, 'Message': 'This email does not have a registered account'}
         return results
 
     @staticmethod
@@ -122,7 +167,7 @@ class Project:
         conn = Database.connect()
         cursor = conn.cursor()
         results = Database.execute_sproc(query, params, cursor)
-        if results['Status'] == 201:
+        if results['Status'] == 200:
             cursor.commit()
         conn.close()
         return results
@@ -160,16 +205,37 @@ class Project:
         else:
             return {'Status': 400, 'Message':'This user is not the owner of the project'}
 
+    @staticmethod
+    def make_public_or_private(project_id, mode):
+        query = f"""
+                UPDATE
+                    [prj].[project]
+                SET
+                    [public] = {mode}
+                WHERE
+                    [ProjectId] = '{project_id}'
+                """
+        conn = Database.connect()
+        cursor = conn.cursor()
+        Database.execute_non_query(query, cursor)
+        cursor.commit()
+        conn.close()
+        if mode == '1':
+            message = 'Project now public'
+        else:
+            message = 'Project now private'
+
+        return{'Status': 200, 'Message': message}
+
     def __init__(self):
-        self.project_id = None
         self.project = {}
 
     def set_project_id(self, project_id):
-        self.project_id = project_id
+        self.project['ProjectId'] = project_id
         return self
 
     def get_project_id(self):
-        return self.project_id
+        return self.project['ProjectId']
 
     def set_creator(self, creator):
         self.project['Creator'] = creator
