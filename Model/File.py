@@ -89,10 +89,3 @@ class File:
         full_local_path = os.path.join(local_directory, file_name)
         s3_client.download_file(bucket, file_path, full_local_path)
         return send_file(full_local_path, as_attachment=True)
-        #if os.path.exists(full_local_path):
-            #response = {'FileName': file_name, 'DatasetName': dataset_name, 'Path': full_local_path, 'Status': '200',
-                        #'Message': 'File downloaded successfully'}
-        #else:
-            #response = {'FileName': file_name, 'DatasetName': dataset_name, 'Path': full_local_path, 'Status': '500',
-                        #'Message': 'File downloaded unsuccessful'}
-        #return response

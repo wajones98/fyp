@@ -1,9 +1,69 @@
 from Utils.Database import Database
 from Model.User import User
+import boto3
 
 import json
 
+
 class Project:
+
+    @staticmethod
+    def add_dataset_to_project(user_id, info):
+        query = f"""
+            SELECT
+                fh.[FileID],
+                fh.[Filepath]
+            FROM 
+                [MetaData].[metadata].[FileHistory] fh
+                INNER JOIN 
+                [MetaData].[metadata].[File] f
+            ON
+                fh.[FileID] = f.[FileID]
+            WHERE
+                f.[DataSet] = '{info['DatasetId']}'
+                AND
+                fh.[Change] = 'source'
+                AND
+                fh.[ProjectID] is NULL
+                """
+        conn = Database.connect()
+        cursor = conn.cursor()
+        results = Database.execute_query(query, cursor)
+        print('------Found files------------')
+        bucket = 'fyp-data-repo'
+        client = boto3.client('s3')
+        for row in results:
+            print(f'FileID: {row[0]} - FilePath: {row[1]}')
+            file_id = row[0]
+            file_path = row[1]
+            for project in info['Projects']:
+                new_path = f'{project}/project_source/{file_path}'
+                response = client.copy_object(
+                    Bucket=bucket,
+                    CopySource=f'/{bucket}/{file_path}',
+                    Key=new_path
+                )
+                print(response)
+                print(f'File {file_id} copied to {new_path} for project {project}')
+                query = f"""
+                            INSERT INTO 
+                                [metadata].[FileHistory]
+                                ([FileID]
+                                ,[UserID]
+                                ,[ProjectID]
+                                ,[Change]
+                                ,[Filepath]
+                                ,[Active]
+                                ,[StartDate]
+                                ,[EndDate])
+                            VALUES
+                                ('{file_id}','{user_id}','{project}','project source','{new_path}',1,GETDATE(),NULL)
+                        """
+                Database.execute_non_query(query, cursor)
+                cursor.commit()
+                print(f"Slowly changing dimension insertion: ('{file_id}','{user_id}','{project}','project source','{new_path}',1,GETDATE(),NULL)")
+        conn.close()
+        return {'Status': 200, 'Message': 'Dataset added to projects'}
 
     @staticmethod
     def get_users_invitations(user_id):

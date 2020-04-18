@@ -23,6 +23,7 @@ def project_get_invitations():
             return Project.get_users_invitations(response['Message'])
     return response
 
+
 @project.route('/project/create', methods=['POST'])
 def project_create():
     if request.method == 'POST':
@@ -76,4 +77,14 @@ def project_public():
         if response['Status'] == 200:
             project_info = request.get_json()
             return Project.make_public_or_private(project_info['ProjectId'], project_info['Mode'])
+    return json.dumps(response)
+
+
+@project.route('/project/add', methods=['POST'])
+def project_add():
+    if request.method == 'POST':
+        response = User.get_user_from_session(request.headers.get('SessionId'))
+        if response['Status'] == 200:
+            info = request.get_json()
+            return Project.add_dataset_to_project(response['Message'], info)
     return json.dumps(response)
