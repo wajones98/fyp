@@ -63,7 +63,6 @@ class Search:
         conn = Database.connect()
         cursor = conn.cursor()
         results = Database.execute_query(self.query, cursor)
-        conn.close()
         all_data = []
         for row in results:
             dataset_id = row[14]
@@ -79,13 +78,48 @@ class Search:
             conn = Database.connect()
             cursor = conn.cursor()
             results = Database.execute_query(tag_query, cursor)
-            conn.close()
             tags = {}
             for tag in results:
                 tags[tag[0]] = tag[1]
+            projects = {}
+            projects_query = f"""
+                                SELECT 
+                                    s.[ProjectID]
+                                    ,s.[ProjectName]
+                                    ,p.[Creator]
+                                    ,p.[Desc]
+                                    ,p.[StartDate]
+                                    ,p.[EndDate]
+                                FROM 
+                                    [MetaData].[metadata].[Search] s
+                                    INNER JOIN
+                                    [MetaData].[prj].[Project] p
+                                ON
+                                    s.[ProjectID] = p.[ProjectId]
+                                WHERE
+                                    s.[ProjectID] IS NOT NULL
+                                    AND
+                                    s.[Change] = 'project source'
+                                    AND
+                                    s.[DatasetID] = '{dataset_id}'
+                                GROUP BY
+                                    s.[DatasetId], s.[ProjectId], s.[ProjectName], p.[Creator], p.[Desc], p.[StartDate], p.[EndDate] 
+                             """
+            conn = Database.connect()
+            cursor = conn.cursor()
+            results = Database.execute_query(projects_query, cursor)
+            for project in results:
+                projects[project[0]] = {
+                    'Name': project[1],
+                    'Creator': project[2],
+                    'Desc': project[3],
+                    'StartDate': str(project[4]),
+                    'EndDate': str(project[5])
+                }
+            conn.close()
             data = {'Filename': row[1]
                 , 'DatasetName': row[2]
-                , 'ProjectName': row[3]
+                , 'Projects': projects
                 , 'SignalType': row[4]
                 , 'Species': row[5]
                 , 'Gender': row[6]
