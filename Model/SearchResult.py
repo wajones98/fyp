@@ -5,8 +5,13 @@ import json
 
 class Search:
 
-    def __init__(self, request):
-        self.query = """
+    def __init__(self, request, search_type):
+        if search_type is None:
+            view = 'Search'
+        else:
+            view = 'SearchPrivate'
+
+        self.query = f"""
                 SELECT
                     s.[FileId]
                     ,s.[Filename]
@@ -24,7 +29,7 @@ class Search:
                     ,s.[Filepath]
                     ,s.[DatasetId]
                 FROM
-                    [metadata].[Search] s
+                    [metadata].[{view}] s
                 """
         self.where_clause = 'WHERE '
         if 'Parameters' in request:
@@ -102,6 +107,8 @@ class Search:
                                     s.[Change] = 'project source'
                                     AND
                                     s.[DatasetID] = '{dataset_id}'
+                                    AND
+                                    p.[Public] = 1
                                 GROUP BY
                                     s.[DatasetId], s.[ProjectId], s.[ProjectName], p.[Creator], p.[Desc], p.[StartDate], p.[EndDate] 
                              """

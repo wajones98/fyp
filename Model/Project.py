@@ -1,5 +1,6 @@
 from Utils.Database import Database
 from Model.User import User
+from Model.SearchResult import Search
 import boto3
 
 import json
@@ -164,6 +165,9 @@ class Project:
                 user.user['pending'] = member_row[1]
                 members.append(user.user)
             project.set_project_members(members)
+
+
+
             projects.append(project.project)
         conn.close()
         response = {'Projects': projects}
@@ -345,3 +349,4 @@ class Project:
 
     def get_project_members(self):
         return self.project['Members']
+

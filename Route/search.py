@@ -13,7 +13,10 @@ def search_for():
     if request.method == 'POST':
         response = UserModel.get_user_from_session(request.headers.get('SessionId'))
         if response['Status'] == 200:
-            search_builder = SearchModel(request.get_json())
+            search_type = None
+            if 'Private' in request.headers:
+                search_type = request.headers.get('Private')
+            search_builder = SearchModel(request.get_json(), search_type)
             return search_builder.execute_search()
     return json.dumps(response)
 
