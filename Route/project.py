@@ -88,3 +88,13 @@ def project_add():
             info = request.get_json()
             return Project.add_dataset_to_project(response['Message'], info)
     return json.dumps(response)
+
+
+@project.route('/project/file/history', methods=['POST'])
+def project_file_history():
+    if request.method == 'POST':
+        response = User.get_user_from_session(request.headers.get('SessionId'))
+        if response['Status'] == 200:
+            info = request.get_json()
+            return Project.get_file_history(info['FileId'], info['ProjectId'])
+    return response

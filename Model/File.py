@@ -34,8 +34,11 @@ class File:
         self.S3_CLIENT.upload_file(self.full_path, self.BUCKET, s3_path)
         return s3_path
 
-    def upload_file_s3(self):
-        s3_path = f"{Common.generate_unique_identifier()}-{self.file_name}"
+    def upload_file_s3(self, custom_path = None):
+        if custom_path is None:
+            s3_path = f"{Common.generate_unique_identifier()}-{self.file_name}"
+        else:
+            s3_path = f"{custom_path}/{Common.generate_unique_identifier()}-{self.file_name}"
         self.S3_CLIENT.upload_file(self.full_path, self.BUCKET, s3_path)
         return s3_path
 

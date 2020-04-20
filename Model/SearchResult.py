@@ -28,6 +28,8 @@ class Search:
                     ,s.[Change]
                     ,s.[Filepath]
                     ,s.[DatasetId]
+                    ,s.[Previous]
+                    ,s.[PreviousChange]
                 FROM
                     [metadata].[{view}] s
                 """
@@ -124,7 +126,8 @@ class Search:
                     'EndDate': str(project[5])
                 }
             conn.close()
-            data = {'Filename': row[1]
+            data = {'FileId': row[0]
+                ,'Filename': row[1]
                 , 'DatasetName': row[2]
                 , 'Projects': projects
                 , 'SignalType': row[4]
@@ -138,6 +141,8 @@ class Search:
                 , 'Change': row[12]
                 , 'Filepath': row[13]
                 , 'DatasetId': row[14]
+                , 'Previous': row[15]
+                , 'PreviousChange': row[16]
                 ,  'Tags': tags}
             all_data.append(data)
         response = {"Results": all_data}

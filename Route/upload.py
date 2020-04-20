@@ -56,3 +56,32 @@ def upload_files():
             return json.dumps(response)
         else:
             return response
+
+
+@upload.route('/upload/file/change/obj', methods=['POST'])
+def upload_change_obj():
+    if request.method == 'POST':
+        response = UserModel.get_user_from_session(request.headers.get('SessionId'))
+        if response['Status'] == 200:
+            submitted_file = request.files['file']
+            file_obj = FileModel(submitted_file)
+            file_valid_response = file_obj.check_file_extension()
+            if file_valid_response['Status'] == 200:
+                file_obj.upload_file_landing()
+                file_path = file_obj.upload_file_s3()
+                file_obj.delete_file_landing()
+                if file_path is not None:
+                    response = {'Status': 201, 'Filepath': file_path, 'Message': 'Successfully uploaded'}
+                else:
+                    response = {'Status': 201, 'FileName': file_obj.file_name, 'Message': 'Could not upload file'}
+        return json.dumps(response)
+
+
+@upload.route('/upload/file/change/metadata', methods=['POST'])
+def upload_change_metadata():
+    if request.method == 'POST':
+        response = UserModel.get_user_from_session(request.headers.get('SessionId'))
+        if response['Status'] == 200:
+            file_info = request.get_json()
+            return Upload.file_history_insert(response['Message'], file_info)
+        return json.dumps(response)

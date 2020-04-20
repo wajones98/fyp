@@ -79,3 +79,44 @@ class Upload:
         Database.execute_non_query(query, cursor)
         cursor.commit()
         conn.close()
+
+    @staticmethod
+    def file_history_insert(user_id, file_info):
+
+        query = f"""
+                SELECT TOP 1 
+                    [FileID]
+                    ,[ProjectID]
+                    ,[Change]
+                FROM 
+                    [MetaData].[metadata].[FileHistory]
+                WHERE
+                    [Filepath] = '{file_info["PreviousFilepath"]}'
+                """
+        conn = Database.connect()
+        cursor = conn.cursor()
+        results = Database.execute_query(query, cursor)
+
+        for row in results:
+            insert_query = f"""
+                            INSERT INTO 
+                                [metadata].[FileHistory]
+                                ([FileID]
+                                ,[UserID]
+                                ,[ProjectID]
+                                ,[Change]
+                                ,[Filepath]
+                                ,[Active]
+                                ,[StartDate]
+                                ,[EndDate]
+                                ,[Previous]
+                                ,[PreviousChange])
+                            VALUES
+                                ('{row[0]}','{user_id}','{row[1]}','{file_info['Change']}',
+                                '{file_info['Filepath']}',1,GETDATE(),NULL,
+                                '{file_info['PreviousFilepath']}','{row[2]}')
+                            """
+            Database.execute_non_query(insert_query, cursor)
+            cursor.commit()
+        conn.close()
+        return {'Status': 201, 'Message': 'Change to file has been uploaded'}

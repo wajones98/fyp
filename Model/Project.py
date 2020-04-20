@@ -7,13 +7,49 @@ import json
 
 
 class Project:
+    @staticmethod
+    def get_file_history(file_id, project_id):
+        query = f"""
+                SELECT
+                      [Filename]
+                      ,[DatasetName]
+                      ,[ProjectName]
+                      ,[Change]
+                      ,[Filepath]
+                      ,[Previous]
+                      ,[PreviousChange]
+                  FROM [MetaData].[metadata].[SearchPrivate]
+                  WHERE
+                    [FileID] = '{file_id}'
+                    AND
+                    [ProjectID] = '{project_id}'                
+                """
+        conn = Database.connect()
+        cursor = conn.cursor()
+        results = Database.execute_query(query, cursor)
+        conn.close()
+        history = []
+        for row in results:
+            file = {
+                'Filename': row[0],
+                'DatasetName': row[1],
+                'ProjectName': row[2],
+                'Change': row[3],
+                'Filepath': row[4],
+                'Previous': row[5],
+                'PreviousChange': row[6]
+            }
+            history.append(file)
+        response = {'History': history}
+        return json.dumps(response)
 
     @staticmethod
     def add_dataset_to_project(user_id, info):
         query = f"""
             SELECT
                 fh.[FileID],
-                fh.[Filepath]
+                fh.[Filepath],
+                fh.[Change]
             FROM 
                 [MetaData].[metadata].[FileHistory] fh
                 INNER JOIN 
@@ -30,22 +66,20 @@ class Project:
         conn = Database.connect()
         cursor = conn.cursor()
         results = Database.execute_query(query, cursor)
-        print('------Found files------------')
         bucket = 'fyp-data-repo'
         client = boto3.client('s3')
         for row in results:
-            print(f'FileID: {row[0]} - FilePath: {row[1]}')
             file_id = row[0]
             file_path = row[1]
+            change_as_previous = row[2]
+
             for project in info['Projects']:
                 new_path = f'{project}/project_source/{file_path}'
-                response = client.copy_object(
+                client.copy_object(
                     Bucket=bucket,
                     CopySource=f'/{bucket}/{file_path}',
                     Key=new_path
                 )
-                print(response)
-                print(f'File {file_id} copied to {new_path} for project {project}')
                 query = f"""
                             INSERT INTO 
                                 [metadata].[FileHistory]
@@ -56,13 +90,15 @@ class Project:
                                 ,[Filepath]
                                 ,[Active]
                                 ,[StartDate]
-                                ,[EndDate])
+                                ,[EndDate]
+                                ,[Previous]
+                                ,[PreviousChange])
                             VALUES
-                                ('{file_id}','{user_id}','{project}','project source','{new_path}',1,GETDATE(),NULL)
+                                ('{file_id}','{user_id}','{project}','project source','{new_path}',1
+                                ,GETDATE(),NULL,'{file_path}', '{change_as_previous}')
                         """
                 Database.execute_non_query(query, cursor)
-                cursor.commit()
-                print(f"Slowly changing dimension insertion: ('{file_id}','{user_id}','{project}','project source','{new_path}',1,GETDATE(),NULL)")
+        cursor.commit()
         conn.close()
         return {'Status': 200, 'Message': 'Dataset added to projects'}
 
