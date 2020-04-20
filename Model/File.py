@@ -6,7 +6,7 @@ from Utils import Common
 from werkzeug.utils import secure_filename
 from flask import send_file
 
-LANDING_FOLDER = '..\\fyp\\landing\\'
+LANDING_FOLDER = '../fyp/landing/'
 
 
 class File:
