@@ -63,6 +63,8 @@ class Upload:
         conn = Database.connect()
         cursor = conn.cursor()
         Database.execute_non_query(query, cursor)
+        cursor.commit()
+        conn.close()
 
     @staticmethod
     def init_file_path(file_id, file_path):
